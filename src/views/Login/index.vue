@@ -1,7 +1,12 @@
 <template>
   <div class="login-container">
     <div class="form-box">
-      <el-form :model="loginForm" :rules="rules" ref="loginFormRef">
+      <el-form
+        :model="loginForm"
+        :rules="rules"
+        ref="loginFormRef"
+        @keyup.enter.native="login"
+      >
         <el-form-item prop="username">
           <el-input
             v-model="loginForm.username"
@@ -24,14 +29,13 @@
 </template>
 
 <script>
-import { login } from '@/api/user'
 export default {
   created () { },
   data () {
     return {
       loginForm: {
-        username: '',
-        password: ''
+        username: 'admin',
+        password: '123456'
       },
       rules: {
         username: [
@@ -55,15 +59,8 @@ export default {
         // 二次校验 手动校验
         await this.$refs.loginFormRef.validate()
         // console.log('校验成功!')
-        try {
-          const res = await login(this.loginForm)
-          console.log(res)
-          // todo 把token存到vuex中，并且持久化localStorage
-          this.$store.commit('setUser', res.data.data.token)
-          this.$router.push('/home')
-        } catch (err) {
-          console.log(err)
-        }
+        await this.$store.dispatch('users/login', this.loginForm)
+        await this.$router.push('/home')
       } catch (err) {
         this.$message.error('登录检验失败!')
       }
