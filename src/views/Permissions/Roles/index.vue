@@ -37,21 +37,20 @@
                 <el-row
                   v-for="(item2, index) in item1.children"
                   :key="index"
-                  class="el-col-second-box"
+                  class="el-row-second-box"
                 >
-                  <el-col :span="5" class="el-col-box">
-                    <el-tag type="success" class="el-tag-box">{{
-                      item2.authName
-                    }}</el-tag>
+                  <el-col :span="6" class="el-col-second">
+                    <el-tag type="success">{{ item2.authName }}</el-tag>
                     <i class="el-icon-caret-right"></i>
                   </el-col>
                   <!-- 第三层 -->
-                  <el-col :span="19" class="el-col-third-box">
+                  <el-col :span="18">
                     <el-tag
-                      class="el-tag-third-box"
                       v-for="(item3, index) in item2.children"
                       :key="index"
+                      class="el-tag-third"
                       closable
+                      @close="handleTagClose(props.row.id, item3.id)"
                     >
                       {{ item3.authName }}
                     </el-tag>
@@ -63,23 +62,15 @@
         </el-table-column>
         <el-table-column prop="id" label="#" width="100"> </el-table-column>
         <el-table-column prop="roleName" label="角色名称"> </el-table-column>
-        <el-table-column prop="mobile" label="角色描述"></el-table-column>
-        <el-table-column label="操作">
-          <template v-slot="scope">
-            <el-button
-              type="primary"
-              icon="el-icon-edit"
-              @click="editBtn(scope.row.id)"
-            ></el-button>
-            <el-button
-              type="danger"
-              icon="el-icon-delete"
-              @click="openDelBox(scope.row.id)"
-            ></el-button>
+        <el-table-column prop="roleDesc" label="角色描述"></el-table-column>
+        <el-table-column label="操作" v-slot="scope">
+          <template>
+            <el-button type="primary" icon="el-icon-edit"></el-button>
+            <el-button type="danger" icon="el-icon-delete"></el-button>
             <el-button
               type="warning"
               icon="el-icon-s-tools"
-              @click="assignRolesDialog = true"
+              @click="assignBtn(scope.row.id)"
             ></el-button>
           </template>
         </el-table-column>
@@ -87,7 +78,6 @@
       <!-- /表格 -->
     </div>
     <!-- 添加角色对话框 -->
-    <!-- 分配角色对话框 -->
     <el-dialog title="添加角色" :visible.sync="addRolesDialog">
       <el-form :model="addRolesParams">
         <el-form-item label="角色名称" :label-width="formLabelWidth">
@@ -108,16 +98,33 @@
         <el-button type="primary" @click.stop="addRolesBtn">确 定</el-button>
       </div>
     </el-dialog>
-    <!-- /分配角色对话框 -->
     <!-- /添加角色对话框 -->
+    <!-- 分配角色对话框 -->
+    <el-dialog
+      title="分配权限"
+      :visible.sync="assignPermissionsDialog"
+      width="50%"
+      :before-close="handleClose"
+    >
+      <AssignPermissions
+        :assignPermissionsDialog.sync="assignPermissionsDialog"
+        :isId="isId"
+        :rightsList="rightsList"
+      >
+      </AssignPermissions>
+    </el-dialog>
+    <!-- /分配角色对话框 -->
   </div>
 </template>
 
 <script>
-import { addRoles } from '@/api/permission'
+// import { getRights } from '@/utils'
+import { addRoles, delRoleRight } from '@/api/permission'
 import { mapGetters } from 'vuex'
 import BreadCrumb from '@/components/BreadCrumb.vue'
+import AssignPermissions from './components/AssignPermissions.vue'
 export default {
+  name: 'rolesPage',
   created () {
     this.$store.dispatch('permissions/getRolesList')
   },
@@ -126,10 +133,13 @@ export default {
       titleList: ['权限管理', '角色列表'],
       addRolesDialog: false,
       formLabelWidth: '120px', // 对话框表单宽度
-      addRolesParams: {
+      addRolesParams: { // 添加角色参数
         roleName: '',
         roleDesc: ''
-      }
+      },
+      assignPermissionsDialog: false, // 分配权限对话框,
+      rightsList: [], // 当前角色列表值
+      isId: null // 当前已选角色id
     }
   },
   methods: {
@@ -142,6 +152,28 @@ export default {
         console.log(err)
       }
       this.addRolesDialog = false
+    },
+    // 打开分配角色框
+    assignBtn (id) {
+      // const that = this
+      this.assignPermissionsDialog = true
+      this.rolesList.forEach(item => {
+        if (item.id === id) {
+          this.isId = id
+          item.children.forEach(item1 => {
+            item1.children.forEach(item2 => this.rightsList.push(...item2.children))
+          })
+        }
+      })
+    },
+    // 关闭分配角色框
+    handleClose () {
+      this.assignPermissionsDialog = false
+    },
+    // 删除角色指定权限
+    async handleTagClose (roleId, rightId) {
+      await delRoleRight(roleId, rightId)
+      this.$store.dispatch('permissions/getRolesList')
     }
   },
   computed: {
@@ -149,7 +181,7 @@ export default {
   },
   watch: {},
   filters: {},
-  components: { BreadCrumb }
+  components: { BreadCrumb, AssignPermissions }
 }
 </script>
 
@@ -162,7 +194,7 @@ export default {
   background-color: #fff;
 }
 .el-row {
-  margin-bottom: 20px;
+  // margin-bottom: 20px;
   .title-btn {
     margin-left: 0 !important;
   }
@@ -188,15 +220,16 @@ export default {
 .el-icon-caret-right {
   padding-left: 10px;
 }
-.el-col-second-box {
-  padding-top: 20px;
-  // display: flex;
+.el-row-second-box {
+  display: flex;
+  align-items: center;
 }
-.el-col-third-box {
-  padding-top: 10px;
+.el-col-second {
+  // padding-top: 20px;
+  display: flex;
+  align-items: center;
 }
-.el-tag-third-box {
-  margin-right: 8px;
-  margin-bottom: 10px;
+.el-tag-third {
+  margin: 8px;
 }
 </style>

@@ -4,5 +4,6 @@ export default {
   total: state => state.users.total,
   userInfo: state => state.users.userInfo,
   rolesList: state => state.permissions.rolesList,
-  roles: state => state.permissions.roles
+  roles: state => state.permissions.roles,
+  allRights: state => state.permissions.allRights
 }
