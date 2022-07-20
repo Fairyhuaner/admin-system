@@ -8,6 +8,7 @@
       node-key="id"
       ref="tree"
       :props="defaultProps"
+      v-if="assignDialog"
     >
     </el-tree>
     <div slot="footer" class="dialog-footer">
@@ -23,6 +24,7 @@ import { mapGetters } from 'vuex'
 export default {
   name: 'AssignPermissionsPage',
   created () {
+    this.$forceUpdate()
     this.$store.dispatch('permissions/getAllRights', 'tree')
     console.log(this.allRights)
     this.data = this.allRights

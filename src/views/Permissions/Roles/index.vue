@@ -60,7 +60,7 @@
             </el-row>
           </template>
         </el-table-column>
-        <el-table-column prop="id" label="#" width="100"> </el-table-column>
+        <el-table-column type="index" label="#" width="100"> </el-table-column>
         <el-table-column prop="roleName" label="角色名称"> </el-table-column>
         <el-table-column prop="roleDesc" label="角色描述"></el-table-column>
         <el-table-column label="操作" v-slot="scope">
@@ -110,6 +110,7 @@
         :assignPermissionsDialog.sync="assignPermissionsDialog"
         :isId="isId"
         :rightsList="rightsList"
+        v-if="assignPermissionsDialog"
       >
       </AssignPermissions>
     </el-dialog>
@@ -126,6 +127,7 @@ import AssignPermissions from './components/AssignPermissions.vue'
 export default {
   name: 'rolesPage',
   created () {
+    this.$forceUpdate()
     this.$store.dispatch('permissions/getRolesList')
   },
   data () {
@@ -179,7 +181,6 @@ export default {
   computed: {
     ...mapGetters(['rolesList'])
   },
-  watch: {},
   filters: {},
   components: { BreadCrumb, AssignPermissions }
 }
